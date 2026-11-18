@@ -6,7 +6,7 @@ from hashlib import sha256
 import json
 from math import log
 from pathlib import Path
-from urllib.request import urlopen
+from subprocess import run
 
 import numpy as np
 from figure import Plot
@@ -25,8 +25,9 @@ def read_data(folder, download):
     if download:
         folder.mkdir(parents=True,exist_ok=True)
         for key in SERIES:
-            with urlopen(URL+key,timeout=30) as response:
-                (folder/(key+".csv")).write_bytes(response.read())
+            response = run(["curl", "--fail", "--silent", "--show-error", "--location",
+                            "--max-time", "30", URL+key], check=True, capture_output=True)
+            (folder/(key+".csv")).write_bytes(response.stdout)
     outputs, hashes = [], {}
     for key in SERIES:
         with (folder/(key+".csv")).open(newline="",encoding="utf-8-sig") as file:
